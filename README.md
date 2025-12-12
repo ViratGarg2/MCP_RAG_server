@@ -1,10 +1,10 @@
-# 🚀 SME Knowledge Base — MCP Server
+# SME Knowledge Base — MCP Server
 
 This repository provides an **MCP (Model Context Protocol) server** that indexes documentation into **Elasticsearch** and exposes tools to query it from MCP-compatible clients such as **Claude Desktop**, **Cursor**, and **GitHub Copilot**.
 
 ---
 
-## 📌 Features
+## Features
 
 - Index documentation (`docs.json`) into Elasticsearch
 - Query the knowledge base using semantic search
@@ -13,7 +13,7 @@ This repository provides an **MCP (Model Context Protocol) server** that indexes
 
 ---
 
-## 🛠 Prerequisites
+## Prerequisites
 
 Before running the server, ensure the following are installed:
 
@@ -96,7 +96,7 @@ You will need the absolute paths for both the `uv` executable and your cloned re
 
 ---
 
-## 🔧 Available Tools
+## Available Tools
 
 The server exposes the following tools to the LLM:
 
@@ -107,7 +107,7 @@ The server exposes the following tools to the LLM:
 
 ---
 
-## 📖 Example Workflow
+## Example Workflow
 
 1.  **Start Elasticsearch** (Docker).
 2.  **Add PDF files** to the `input/` folder.
@@ -118,7 +118,7 @@ The server exposes the following tools to the LLM:
 
 ---
 
-## 📝 Troubleshooting
+## Troubleshooting
 
 *   **Connection Refused:** Ensure the Docker container is running (`docker ps`) and port 9200 is accessible.
 *   **Path Errors:** Double-check that the paths in your config JSON are absolute (start with `/`) and point to the correct locations.
