@@ -1,0 +1,13 @@
+[project]
+name = "my-server-sme"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+requires-python = ">=3.11"
+dependencies = [
+    "elasticsearch>=8.0.0",
+    "llama-index>=0.14.10",
+    "mcp",
+    "pdfminer-six>=20251107",
+    "pymupdf>=1.26.7",
+]
