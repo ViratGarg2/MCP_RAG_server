@@ -4,6 +4,7 @@ import os
 import sys
 import subprocess
 import time
+import uuid
 from mcp.server.fastmcp import FastMCP
 from elasticsearch import Elasticsearch
 
@@ -98,6 +99,88 @@ def index_documents() -> str:
         return f"Successfully indexed {count} documents into '{INDEX_NAME}'."
     except Exception as e:
         return f"Error indexing documents: {str(e)}"
+
+@mcp.tool()
+def add_text_to_index(title: str, content: str) -> str:
+    """
+    Adds a new text document to the knowledge base.
+    If the content exceeds 1000 words, it will be chunked into smaller documents.
+    Updates both the persistent JSON storage and the Elasticsearch index.
+    
+    Args:
+        title: A descriptive title for the text.
+        content: The actual text content to index.
+    """
+    # Helper to split into chunks
+    words = content.split()
+    CHUNK_SIZE = 1000
+    
+    chunks = []
+    if len(words) <= CHUNK_SIZE:
+        chunks.append((title, content))
+    else:
+        for i in range(0, len(words), CHUNK_SIZE):
+            chunk_words = words[i:i + CHUNK_SIZE]
+            chunk_content = " ".join(chunk_words)
+            part_num = (i // CHUNK_SIZE) + 1
+            total_parts = (len(words) + CHUNK_SIZE - 1) // CHUNK_SIZE
+            chunk_title = f"{title} (Part {part_num}/{total_parts})"
+            chunks.append((chunk_title, chunk_content))
+
+    # Prepare data for storage and indexing
+    new_entries = {}
+    es_docs = []
+    
+    for chunk_title, chunk_content in chunks:
+        doc_id = str(uuid.uuid4())
+        new_entries[doc_id] = {
+            "title": chunk_title,
+            "content": chunk_content,
+            "source": "user_input",
+            "subsections": {}
+        }
+        es_docs.append({
+            "id": doc_id,
+            "title": chunk_title,
+            "content": chunk_content
+        })
+
+    # Update docs.json
+    file_path = os.path.join(os.path.dirname(__file__), "data", "docs.json")
+    
+    try:
+        data = {}
+        if os.path.exists(file_path):
+            with open(file_path, "r") as f:
+                try:
+                    data = json.load(f)
+                except json.JSONDecodeError:
+                    pass 
+        
+        data.update(new_entries)
+        
+        os.makedirs(os.path.dirname(file_path), exist_ok=True)
+        with open(file_path, "w") as f:
+            json.dump(data, f, indent=4)
+            
+    except Exception as e:
+        return f"Error updating local storage: {str(e)}"
+
+    # Index to Elasticsearch
+    try:
+        if not es.indices.exists(index=INDEX_NAME):
+            es.indices.create(index=INDEX_NAME)
+            
+        for doc in es_docs:
+            es.index(index=INDEX_NAME, id=doc["id"], document=doc)
+        
+        if len(chunks) == 1:
+            return f"Successfully added document '{title}' (ID: {es_docs[0]['id']}) to index and storage."
+        else:
+            return f"Successfully added document '{title}' split into {len(chunks)} parts to index and storage."
+        
+    except Exception as e:
+        return f"Error indexing to Elasticsearch: {str(e)}"
 
 @mcp.tool()
 def query_knowledge_base(query: str) -> str:
