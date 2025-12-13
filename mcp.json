@@ -1,0 +1,14 @@
+{
+  "mcpServers": {
+    "sme-knowledge-base": {
+      "command": "uv",
+      "args": [
+        "run",
+        "elastic_server.py"
+      ],
+      "env": {
+        "ES_HOST": "http://localhost:9200"
+      }
+    }
+  }
+}

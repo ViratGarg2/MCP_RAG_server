@@ -73,6 +73,8 @@ You will need the absolute paths for both the `uv` executable and your cloned re
     ```
 
 ### 2. Edit Configuration File
+A template configuration file is provided in [`mcp.json`](./mcp.json). You can copy its content, but remember to update the paths to be absolute.
+
 1.  Open **Claude Desktop**.
 2.  Go to **Settings** > **Developer** > **Edit Config**.
 3.  Add the following configuration to the `mcpServers` object in the JSON file:
@@ -87,7 +89,10 @@ You will need the absolute paths for both the `uv` executable and your cloned re
         "--directory",
         "/absolute/path/to/my_server_sme",
         "elastic_server.py"
-      ]
+      ],
+      "env": {
+        "ES_HOST": "http://localhost:9200"
+      }
     }
   }
 }
