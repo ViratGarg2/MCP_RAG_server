@@ -3,6 +3,7 @@ import re
 import json
 import logging
 import os
+import hashlib
 from collections import Counter
 
 # Configure logging
@@ -108,40 +109,55 @@ def extract_from_pdf(pdf_path):
                             # Optional: Capture preamble text
                             pass
 
-    # Cleanup: join lists into strings
+    # Cleanup: join lists into strings and generate IDs
     for h, hdata in data.items():
         hdata["content"] = " ".join(hdata["content"])
         
+        # Generate deterministic doc_id based on content
+        # We combine source, title, and content to ensure uniqueness per file/section
+        # This prevents duplicate indexing if the script is run multiple times
+        unique_string = f"{hdata['source']}_{hdata['title']}_{hdata['content']}"
+        doc_id = hashlib.md5(unique_string.encode('utf-8')).hexdigest()
+        hdata["doc_id"] = doc_id
+        
     return data
 
-# Main processing loop
-if not os.path.exists(INPUT_DIR):
-    logger.error(f"Input directory '{INPUT_DIR}' does not exist.")
-    exit(1)
+def process_all_pdfs():
+    """
+    Scans the input directory for PDFs, extracts content, and saves to docs.json.
+    """
+    if not os.path.exists(INPUT_DIR):
+        logger.error(f"Input directory '{INPUT_DIR}' does not exist.")
+        return
 
-pdf_files = [f for f in os.listdir(INPUT_DIR) if f.lower().endswith('.pdf')]
+    pdf_files = [f for f in os.listdir(INPUT_DIR) if f.lower().endswith('.pdf')]
+    
+    all_data = {}
 
-if not pdf_files:
-    logger.warning(f"No PDF files found in {INPUT_DIR}")
-else:
-    for pdf_file in pdf_files:
-        pdf_path = os.path.join(INPUT_DIR, pdf_file)
-        file_data = extract_from_pdf(pdf_path)
-        
-        # Merge into main dictionary, ensuring unique keys across files
-        for key, value in file_data.items():
-            final_key = key
-            count = 2
-            while final_key in all_data:
-                final_key = f"{key} ({count})"
-                count += 1
-            all_data[final_key] = value
+    if not pdf_files:
+        logger.warning(f"No PDF files found in {INPUT_DIR}")
+    else:
+        for pdf_file in pdf_files:
+            pdf_path = os.path.join(INPUT_DIR, pdf_file)
+            file_data = extract_from_pdf(pdf_path)
+            
+            # Merge into main dictionary, ensuring unique keys across files
+            for key, value in file_data.items():
+                final_key = key
+                count = 2
+                while final_key in all_data:
+                    final_key = f"{key} ({count})"
+                    count += 1
+                all_data[final_key] = value
 
     # Save JSON
     with open(OUTPUT_FILE, "w", encoding="utf-8") as f:
         json.dump(all_data, f, indent=4, ensure_ascii=False)
 
     logger.info(f"Extraction complete. Processed {len(pdf_files)} files. Saved to {OUTPUT_FILE}. Found {len(all_data)} total headings.")
+
+if __name__ == "__main__":
+    process_all_pdfs()
 
 
 

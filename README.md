@@ -4,12 +4,12 @@ This repository provides an **MCP (Model Context Protocol) server** that indexes
 
 ---
 
-## Features
+## 📌 Features
 
-- Index documentation (`docs.json`) into Elasticsearch
-- Query the knowledge base using semantic search
-- Integrates seamlessly with any MCP-enabled environment
-- Lightweight, fast, and easy to extend
+- **Smart Indexing**: Uses deterministic IDs to prevent duplicate entries in Elasticsearch.
+- **Semantic Search**: Query the knowledge base using Elasticsearch's matching capabilities.
+- **Dynamic Updates**: Add new text content directly via MCP tools.
+- **Robustness**: Gracefully handles database connection failures.
 
 ---
 
@@ -34,7 +34,7 @@ docker run -d --name elasticsearch \
   -e "discovery.type=single-node" \
   -e "xpack.security.enabled=false" \
   -e ES_JAVA_OPTS="-Xms1g -Xmx1g" \
-  docker.elastic.co/elasticsearch/elasticsearch:8.11.0
+  docker.elastic.co/elasticsearch/elasticsearch:9.1.5
 ```
 *(Note: Ensure the version tag matches your requirements. Version 8.11.0 is used here as a stable default.)*
 
@@ -96,26 +96,31 @@ You will need the absolute paths for both the `uv` executable and your cloned re
 
 ---
 
-## Available Tools
+## 🔧 Available Tools
 
 The server exposes the following tools to the LLM:
 
 | Tool Name | Description |
 | :--- | :--- |
-| **`index_documents`** | Reads the processed data from `data/docs.json`, flattens the structure, and indexes it into Elasticsearch. **This must be called once to populate the database.** |
-| **`add_text_to_index`** | Adds a new text document (Title + Content) to the knowledge base|
-| **`query_knowledge_base`** | Accepts a search query string and returns the most relevant document sections (Heading and Content) from the knowledge base. |
+| **`ingest_pdfs`** | Scans the `input/` directory for new PDFs, extracts text, updates `docs.json`, and indexes everything into Elasticsearch. **Call this after adding new files.** |
+| **`index_documents`** | Manually triggers the indexing process from `data/docs.json` to Elasticsearch. Useful if you've modified the JSON file directly. |
+| **`add_text_to_index`** | Adds a new text document to the knowledge base. **Features:** <br>• Updates both persistent storage (`docs.json`) and Elasticsearch.<br>• Automatically chunks content > 1000 words.<br>• Generates unique IDs. |
+| **`query_knowledge_base`** | Accepts a search query string and returns the top 2 most relevant document sections (Heading + Content). |
 
 ---
 
-## Example Workflow
+## 📖 Example Workflow
 
-1.  **Start Elasticsearch** (Docker).
-2.  **Add PDF files** to the `input/` folder.
-3.  **Run Extraction**: `uv run extraction.py`.
-4.  **Start the MCP Server** (via Claude/Cursor).
-5.  **Index Data**: Ask Claude to "Index the documents".
-6.  **Query**: Ask questions like "Explain how indexing works."
+1.  **Start Elasticsearch**: Ensure your Docker container is running.
+    ```bash
+    docker start elasticsearch
+    ```
+2.  **Add Documents**: Drop any PDF files you want to index into the `input/` folder.
+3.  **Start Server**: When you open Claude Desktop or Cursor, the server starts automatically.
+    *   It will scan `input/`, extract text from new PDFs, and index them into Elasticsearch.
+4.  **Interact**:
+    *   "What does the document say about [topic]?" (Uses `query_knowledge_base`)
+    *   "Add this meeting note to the knowledge base: [content]" (Uses `add_text_to_index`)
 
 ---
 
