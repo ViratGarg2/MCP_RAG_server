@@ -103,7 +103,7 @@ The server exposes the following tools to the LLM:
 | Tool Name | Description |
 | :--- | :--- |
 | **`index_documents`** | Reads the processed data from `data/docs.json`, flattens the structure, and indexes it into Elasticsearch. **This must be called once to populate the database.** |
-| **`add_text_to_index`** | Adds a new text document (Title + Content) to the knowledge base. Updates both the persistent `docs.json` storage and the Elasticsearch index immediately. |
+| **`add_text_to_index`** | Adds a new text document (Title + Content) to the knowledge base|
 | **`query_knowledge_base`** | Accepts a search query string and returns the most relevant document sections (Heading and Content) from the knowledge base. |
 
 ---
